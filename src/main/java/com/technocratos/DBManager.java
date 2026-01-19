@@ -5,16 +5,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBManager {
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/GAMEDB";
-    private static final String DB_USER = "postgres";
-    private static final String DB_PASSWORD = "postgres";
+
     private static Connection connection;
+    private static final PropertiesLoader propsLoader =  new PropertiesLoader();
+
 
     private static DBManager instance;
 
-    private DBManager() {
-        initialize();
-    }
+    private DBManager() {}
 
     public static DBManager getInstance() {
         if (instance == null) {
@@ -26,10 +24,9 @@ public class DBManager {
 
     private void initialize() {
         try {
-            Class.forName("org.postgresql.Driver");
-            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            System.out.println("PostgreSQL подключен: " + DB_URL);
-        } catch (ClassNotFoundException | SQLException e) {
+            Class.forName(propsLoader.getProperty("database.driver"));
+
+        } catch (ClassNotFoundException e) {
 
             throw new RuntimeException("Не удалось подключиться к БД", e);
         }
@@ -38,7 +35,11 @@ public class DBManager {
 
     public Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            connection = DriverManager.getConnection(
+                    propsLoader.getProperty("database.url"),
+                    propsLoader.getProperty("database.username"),
+                    propsLoader.getProperty("database.password")
+            );
         }
         return connection;
     }
